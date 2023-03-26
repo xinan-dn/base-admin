@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- -->
+    <script th:replace="common/head::static"></script>
+
+    <!-- -->
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+
+    <!-- -->
+    <link th:href="@{/sys/user/css/user.css}" rel="stylesheet" type="text/css"/>
+
+    <script th:inline="javascript">
+        //
+        // ctx = /*[[@{/}]]*/'';
+        ctx = [[${#request.getContextPath()}]];//
+    </script>
+</head>
+<body>
+<form id="uploadForm" enctype="multipart/form-data" class="layui-form layui-form-pane" method="post">
+    文件（** excle从第2行开始读取用户信息，最顶级上级id需填写为”最顶级“！）:<input id="file" type="file" name="file"/>
+</form>
+<button onclick="uploadAndGetData()" style="margin-top: 1.1em;" class="layui-btn layui-btn-sm" >计算用户关系<i class="layui-icon layui-icon-set-sm" style="margin-left: 5px;"></i></button>
+<button onclick="uploadAndDownFile()" style="margin-top: 1.1em;" class="layui-btn layui-btn-sm" >导出结果<i class="layui-icon layui-icon-download-circle" style="margin-left: 5px;"></i></button>
+
+</body>
+
+<script type="text/javascript">
+
+    var layer;
+    layui.use('layer', function(){
+        layer = layui.layer;
+    });
+
+    function uploadAndDownFile(){
+        debugger;
+        var index = layer.load(2, {time: 3600*1000,shade: [0.3, '#393D49']});
+
+        $.ajax({
+            type: 'post',
+            url: ctx + '/userLevel/calcuUserLevel',
+            data: null,
+            dataType : 'json',
+            cache: false,
+            processData: false,
+            contentType: false,
+        }).success(function (data) {
+            debugger;
+            //
+            layer.close(index);
+            alert("计算完成");
+        }).error(function () {
+            //
+            layer.close(index);
+            alert("计算完成");
+        });
+    }
+
+    function uploadAndGetData(){
+        debugger;
+        var index = layer.load(2, {time: 3600*1000,shade: [0.3, '#393D49']});
+        var formData = new FormData($('#uploadForm')[0]);
+
+        $.ajax({
+            type: 'post',
+            url: ctx + '/userLevel/uploadData',
+            data: formData,
+            dataType : 'json',
+            cache: false,
+            processData: false,
+            contentType: false,
+        }).success(function (data) {
+            debugger;
+            //
+            layer.close(index);
+            alert("导入成功")
+        }).error(function () {
+            //
+            layer.close(index);
+            alert("导入成功");
+        });
+    }
+</script>
+</html>

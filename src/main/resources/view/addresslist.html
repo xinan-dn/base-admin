@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- -->
+    <script th:replace="common/head::static"></script>
+
+    <!-- -->
+    <script src="https://cdn.bootcss.com/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- -->
+    <link th:href="@{/sys/authority/css/authority.css}" rel="stylesheet" type="text/css"/>
+
+    <script th:inline="javascript">
+        //
+        // ctx = /*[[@{/}]]*/'';
+        ctx = [[${#request.getContextPath()}]];//
+    </script>
+</head>
+<body>
+<div class="layui-col-md6" style="width: 100%;">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-table-tool" style="width: 97%;">
+                <div class="layui-table-tool-temp">
+                    <div >
+                        <span>链型：</span>
+                        <select id="selectChain" style="width:100px;height: 2em;margin-right:1em;">
+                            <option value="">请选择</option>
+                            <option value="TRX">波场链</option>
+                            <option value="ETH">ETH链</option>
+                            <option value="BSC">BSC链</option>
+                        </select>
+                        <span>地址：</span>
+                        <input type="text" id="address" name="address" autocomplete="off" style="height: 2em;margin-right: 1em;"
+                               placeholder="请输入地址">
+                        <span>标签：</span>
+                        <input type="text" id="label" name="label" autocomplete="off" style="height: 2em;margin-right: 1em;"
+                        placeholder="请输入标签">
+                        <button class="layui-btn layui-btn-sm" lay-event="query" onclick="showPage(1)">查询</button>
+                        <button class="layui-btn layui-btn-sm" lay-event="query" onclick="deleteDup()">删除重复</button>
+                    </div>
+                </div>
+            </div>
+            <!-- -->
+            <div class="layui-table-box">
+                <div class="layui-table-header" style="width: 99.7%;">
+                    <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>地址</th>
+                            <th style="width: 10%;">链型</th>
+                            <th style="width: 30%;">标签</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="layui-table-body layui-table-main">
+                    <table id="userTable" cellspacing="0" cellpadding="0" border="0" class="layui-table" style="width: 99.6%;">
+                    </table>
+                </div>
+            </div>
+            <div class="layui-table-page">
+                <div id="tablePage" class="layui-box layui-laypage layui-laypage-default"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+    var layer;
+    layui.use('layer', function(){
+        layer = layui.layer;
+    });
+
+    $(function(){
+        showPage(1);
+    });
+    function deleteDup() {
+        debugger;
+        var index = layer.load(2, {time: 3600*1000,shade: [0.3, '#393D49']});
+
+        $.ajax({
+            type: 'post',
+            url: ctx + '/tool/address/deleteDupAddress',
+            data: "",
+            dataType : 'json',
+            cache: false,
+            processData: false,
+            contentType: false,
+            success:function(data){
+                //
+                layer.close(index);
+                alert("删除成功")
+            },
+            error:function (){
+                //
+                layer.close(index);
+                alert("删除成功")
+            }
+        });
+    }
+    function showPage(page){
+        debugger;
+        var chain = $('#selectChain').val();
+        var address = $('#address').val();
+        var label = $('#label').val();
+
+        $.ajax({
+            type:"post",
+            url: ctx + '/tool/address/listByPage',
+            dataType:"json",
+            data: {
+                'chain':chain,
+                'address':address,
+                'label':label,
+                'page':page,
+                'pageSize':20
+            },
+            cache: false,
+            success:function(data){
+                debugger
+
+                //
+                var selectChain = document.getElementById("selectChain");
+                selectChain.valueOf(chain);
+
+                var rows = data.data.records; //
+                var page = data.data.page;
+                var pageSize = data.data.pageSize;
+                data = data.data.rows;
+                var pageNum = Math.ceil(rows/pageSize); //
+                var content = '<tbody>';
+                for(var i=0;i<data.length;i++){
+                    content += '<tr>' +
+                        '<td>'+data[i].address+'</td>' +
+                        '<td style="width: 10%;">'+data[i].chain+'</td>' +
+                        '<td style="width: 30%;">'+data[i].label+'</td>' +
+                        '</tr>';
+                }
+                $("#userTable").empty();
+                $("#userTable").append(content);
+
+                var pageContent = '';
+                if(page == 1){
+                    pageContent += '<a href="#" class="layui-laypage-prev layui-disabled">《</a>';
+                }else{
+                    pageContent += '<a href="javascript:showPage('+(page-1)+')" >《</a>';
+                }
+
+                var startPageNum = 1;
+                var endPageNum = pageNum;
+                if (pageNum > 10) {
+                    if (page > 5) {
+                        startPageNum = page - 4;
+                        endPageNum = page +5;
+                    } else {
+                        endPageNum = 10;
+                    }
+                }
+                for(var i=startPageNum;i<=endPageNum;i++){
+                    if(i == page){
+                        pageContent += '<a href="javascript:showPage('+i+')" class="layui-laypage-prev layui-disabled">'+i+'</a>';
+                    }else{
+                        pageContent += '<a href="javascript:showPage('+i+')">'+i+'</a>';
+                    }
+                }
+
+                if(page == pageNum){
+                    pageContent += '<a href="#" class="layui-laypage-prev layui-disabled">》</a>';
+                }else{
+                    pageContent += '<a href="javascript:showPage('+(page+1)+')" >》</a>';
+                }
+
+                pageContent += '<span class="layui-laypage-count">' +
+                    '共'+rows+' 条记录/ '+pageNum+'页' +
+                '</span>>';
+
+                $("#tablePage").empty();
+                $("#tablePage").append(pageContent);
+            }
+        });
+    }
+</script>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- -->
+    <script th:replace="common/head::static"></script>
+
+    <!-- -->
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+
+    <!-- -->
+    <link th:href="@{/sys/authority/css/authority.css}" rel="stylesheet" type="text/css"/>
+
+    <script th:inline="javascript">
+        //
+        // ctx = /*[[@{/}]]*/'';
+        ctx = [[${#request.getContextPath()}]];//
+    </script>
+</head>
+<body>
+<div class="layui-col-md6" style="width: 100%;">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-table-tool" style="width: 97%;">
+                <div class="layui-table-tool-temp">
+                    <div >
+                        <textarea id="inputVal" style="width: 100%; height: 10em;" placeholder="请输入身份证号，每行一个..."></textarea>
+                        <button class="layui-btn layui-btn-sm" lay-event="query" onclick="query()">开始查询</button>
+                    </div>
+                </div>
+            </div>
+            <!-- -->
+            <div class="layui-table-box">
+                <div class="layui-table-header" style="width: 99.7%;">
+                    <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>身份证号码</th>
+                            <th style="width: 20%;">省份</th>
+                            <th style="width: 20%;">城市</th>
+                            <th style="width: 20%;">区</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="layui-table-body layui-table-main">
+                    <table id="userTable" cellspacing="0" cellpadding="0" border="0" class="layui-table" style="width: 99.6%;">
+                    </table>
+                </div>
+            </div>
+            <div class="layui-table-page">
+                <div id="tablePage" class="layui-box layui-laypage layui-laypage-default"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+
+    function query(){
+        var inputVal = $('#inputVal').val();
+        var selectChain = $('#selectChain').val();
+
+        if (inputVal == null) {
+            alert("请输入待查询信息");
+            return;
+        }
+
+        $.ajax({
+            type:"post",
+            url: ctx + '/tool/idcard/query',
+            dataType:"json",
+            data: {
+                'idcard':inputVal
+            },
+            cache: false,
+            success:function(data){
+                debugger
+                var content = '<tbody>';
+                for(var i=0;i<data.length;i++){
+                    content += '<tr>' +
+                        '<td>'+data[i].idcard+'</td>' +
+                        '<td style="width: 20%;">'+data[i].province+'</td>' +
+                        '<td style="width: 20%;">'+data[i].city+'</td>' +
+                        '<td style="width: 20%;">'+data[i].area+'</td>' +
+                        '</tr>';
+                }
+                $("#userTable").empty();
+                $("#userTable").append(content);
+            }
+        });
+    }
+</script>
+</html>

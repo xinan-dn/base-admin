@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huanzi.qch.baseadmin.userlevel.mapper.MoneyMapper" >
+    <resultMap id="moneyRecord" type="cn.huanzi.qch.baseadmin.userlevel.pojo.MoneyRecord" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="award_type" property="awardType" jdbcType="VARCHAR" />
+        <result column="coin_type" property="coinType" jdbcType="VARCHAR" />
+        <result column="money" property="money" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <delete id="deleteAll">
+        delete from tb_money
+    </delete>
+
+    <select id="queryMoneyByUser" resultMap="moneyRecord">
+        select name,award_type, coin_type, sum(money) as money
+        from tb_money
+        group by name,award_type, coin_type
+        order  by name
+            limit #{startRow},#{pageSize}
+    </select>
+
+    <insert id="saveAll" parameterType="cn.huanzi.qch.baseadmin.userlevel.pojo.MoneyRecord" >
+        insert into tb_money (name, award_type, coin_type, money)
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+            (
+            #{item.name},
+            #{item.awardType},
+            #{item.coinType},
+            #{item.money}
+            )
+        </foreach >
+    </insert>
+
+    <select id="getWithPage" resultMap="moneyRecord">
+        select t.* from (
+        select name,award_type, coin_type, sum(money) as money
+        from tb_money
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="awardType != null and awardType != ''">
+                and award_type = #{awardType}
+            </if>
+            <if test="coinType != null and coinType != ''">
+                and coin_type = #{coinType}
+            </if>
+        </where>
+        group by name,award_type, coin_type
+        ) t
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="queryMoney" resultMap="moneyRecord">
+        select name,award_type, coin_type, sum(money) as money
+        from tb_money
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="awardType != null and awardType != ''">
+                and award_type = #{awardType}
+            </if>
+            <if test="coinType != null and coinType != ''">
+                and coin_type = #{coinType}
+            </if>
+        </where>
+        group by name,award_type, coin_type
+    </select>
+
+    <select id="getRecords" resultType="java.lang.Integer">
+        select count(1) from (
+        select name,award_type, coin_type, sum(money) as money
+        from tb_money
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="awardType != null and awardType != ''">
+                and award_type = #{awardType}
+            </if>
+            <if test="coinType != null and coinType != ''">
+                and coin_type = #{coinType}
+            </if>
+        </where>
+        group by name,award_type, coin_type
+        ) t
+    </select>
+
+    <select id="getTotalMoney" resultType="java.lang.Double">
+        select sum(money) as money
+        from tb_money
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="awardType != null and awardType != ''">
+                and award_type = #{awardType}
+            </if>
+            <if test="coinType != null and coinType != ''">
+                and coin_type = #{coinType}
+            </if>
+        </where>
+    </select>
+
+    <select id="getAwardTypeList" resultType="java.lang.String">
+        select distinct(award_type)
+        from tb_money
+    </select>
+
+    <select id="getCoinTypeList" resultType="java.lang.String">
+        select distinct(coin_type)
+        from tb_money
+    </select>
+</mapper>

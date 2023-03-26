@@ -1,0 +1,82 @@
+##### 公共 配置 #######
+
+#内置Tomcat容器配置
+server:
+  port: 8080
+  servlet:
+    #应用路径，配置应用路径，可方便进行反向代理
+    context-path:
+    #context-path: /baseadmin
+#基础配置
+spring:
+  profiles:
+    active: ${BASE_ADMIN:dev} #选择配置分支，先读取系统环境变量，如果没有则默认值为 dev
+  application:
+    name: base-admin
+
+  #修改thymeleaf访问根路径
+  thymeleaf:
+    prefix: classpath:/view/
+
+  #mvc接收参数时对日期进行格式化
+  mvc:
+    async:
+      request-timeout: 1800000
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  #jackson对响应回去的日期参数进行格式化
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  #打印SQL
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 1000
+
+#是否需要输入验证码
+captcha:
+  enable: false
+
+mybatis:
+  mapper-locations: classpath:mapping/*.xml  #注意：一定要对应mapper映射xml文件的所在路径
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+---
+##### dev 配置 #######
+spring:
+  profiles: dev
+
+  #数据库配置
+  datasource:
+    url: jdbc:mysql://47.106.116.23:3306/manager2?serverTimezone=GMT%2B8&characterEncoding=utf-8
+    username: manager2
+    password: Huawei@123
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#是否需要输入验证码
+captcha:
+  enable: false
+
+---
+##### prod 配置 #######
+spring:
+  profiles: prod
+
+  #数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/manager?serverTimezone=GMT%2B8&characterEncoding=utf-8
+    username: manager
+    password: Huawei@123
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#是否需要输入验证码
+captcha:
+  enable: true

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huanzi.qch.baseadmin.userlevel.mapper.BankCardMapper" >
+
+    <select id="queryByPrefix" resultType="java.util.Map">
+        select left(bank_card_prefix, 6) as bank_card_prefix, bank, type
+        from base_bank_card
+        where left(bank_card_prefix, 6) in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

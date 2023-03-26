@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- -->
+    <script th:replace="common/head::static"></script>
+
+    <!-- -->
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+
+    <!-- -->
+    <link th:href="@{/sys/authority/css/authority.css}" rel="stylesheet" type="text/css"/>
+
+    <script th:inline="javascript">
+        //
+        // ctx = /*[[@{/}]]*/'';
+        ctx = [[${#request.getContextPath()}]];//
+    </script>
+</head>
+<body>
+<div class="layui-col-md6" style="width: 100%;">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-table-tool" style="width: 97%;">
+                <div class="layui-table-tool-temp">
+                    <div >
+                        <textarea id="inputVal" style="width: 100%; height: 10em;" placeholder="请输入地址，每行一个，单次最多20个..." ></textarea>
+                        <!--<select id="selectChain" style="width:100px;height: 2em;margin-right:1em;">
+                        <option value="TRX">
+                        <option value="ETH">ETH
+                        <option value="BSC">BSC
+                            </select>-->
+
+                            <input type="radio" name="chain" value="TRX" title="波场链" checked="true"/>
+                            <span style="margin-right: 1em;">波场链</span>
+                            <input type="radio" name="chain" value="ETH" title="ETH链" />
+                        <span style="margin-right: 1em;">ETH链</span>
+                            <input type="radio" name="chain" value="BSC" title="BSC链" />
+                        <span style="margin-right: 1em;">BSC链</span>
+
+                            <button class="layui-btn layui-btn-sm" lay-event="query" onclick="query()">开始查询</button>
+                    </div>
+                </div>
+            </div>
+            <!-- -->
+            <div class="layui-table-box">
+                <div class="layui-table-header" style="width: 99.7%;">
+                    <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>地址</th>
+                            <th style="width: 20%;">标签</th>
+                            <th style="width: 20%;">本币余额</th>
+                            <th style="width: 20%;">usdt余额</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="layui-table-body layui-table-main">
+                    <table id="userTable" cellspacing="0" cellpadding="0" border="0" class="layui-table" style="width: 99.6%;">
+                    </table>
+                </div>
+            </div>
+            <div class="layui-table-page">
+                <div id="tablePage" class="layui-box layui-laypage layui-laypage-default"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+
+    var layer;
+    layui.use('layer', function(){
+        layer = layui.layer;
+    });
+
+    function query(){
+        debugger;
+        var index = layer.load(2, {time: 3600*1000,shade: [0.3, '#393D49']});
+        var inputVal = $('#inputVal').val();
+        var selectChain =$('input[name=chain]:checked').val();
+
+        if (inputVal == null) {
+            alert("请输入待查询信息");
+            return;
+        }
+
+        $.ajax({
+            type:"post",
+            url: ctx + '/tool/address/query',
+            dataType:"json",
+            data: {
+                'address':inputVal,
+                'chain':selectChain
+            },
+            cache: false,
+            success:function(data){
+                debugger
+                var content = '<tbody>';
+                var chain = data.chain;
+
+                if ('TRX' == chain) {
+                    $('input:radio[name=chain]')[0].checked = true;
+                    $('input:radio[name=chain]')[1].checked = false;
+                    $('input:radio[name=chain]')[2].checked = false;
+                } else if ('ETH' == chain) {
+                    $('input:radio[name=chain]')[0].checked = false;
+                    $('input:radio[name=chain]')[1].checked = true;
+                    $('input:radio[name=chain]')[2].checked = false;
+                } else {
+                    $('input:radio[name=chain]')[0].checked = false;
+                    $('input:radio[name=chain]')[1].checked = false;
+                    $('input:radio[name=chain]')[2].checked = true;
+                }
+
+                var data = data.list;
+                for(var i=0;i<data.length;i++){
+                    content += '<tr>' +
+                        '<td>'+data[i].address+'</td>' +
+                        '<td style="width: 20%;">'+data[i].label+'</td>' +
+                        '<td style="width: 20%;">'+data[i].currBalance+'</td>' +
+                        '<td style="width: 20%;">'+data[i].usdtBalance+'</td>' +
+                        '</tr>';
+                }
+                $("#userTable").empty();
+                $("#userTable").append(content);
+                layer.close(index);
+            },
+            error:function (){
+                layer.close(index);
+            }
+        });
+    }
+</script>
+</html>

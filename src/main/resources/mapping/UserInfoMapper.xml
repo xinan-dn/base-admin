@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huanzi.qch.baseadmin.userlevel.mapper.UserInfoMapper" >
+    <resultMap id="userInfo" type="cn.huanzi.qch.baseadmin.userlevel.pojo.UserInfo" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="parent" property="parent" jdbcType="VARCHAR" />
+        <result column="level" property="level" jdbcType="INTEGER" />
+        <result column="fz_level" property="fzLevel" jdbcType="INTEGER" />
+        <result column="children_num" property="childrenNum" jdbcType="INTEGER" />
+        <result column="money" property="money" jdbcType="VARCHAR" />
+        <result column="total_money" property="totalMoney" jdbcType="VARCHAR" />
+        <result column="parent_long_id" property="parentLongId" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <select id="findAll" parameterType="java.lang.Integer" resultMap="userInfo">
+        select *
+        from tb_user_info
+                 limit #{startRow}, #{pageSize}
+    </select>
+
+    <select id="findAllUserMoney" parameterType="java.lang.Integer" resultType="cn.huanzi.qch.baseadmin.userlevel.dto.UserDTO">
+        select *
+        from tb_user_money
+                 limit #{startRow}, #{pageSize}
+    </select>
+
+    <select id="getWithPage" resultMap="userInfo">
+        select *
+        from tb_user_info
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="fzLevelStart != null">
+                and fz_level &gt;= #{fzLevelStart}
+            </if>
+            <if test="fzLevelEnd != null and fzLevelEnd != ''">
+                and fz_level &lt;= #{fzLevelEnd}
+            </if>
+            <if test="fzNumStart != null and fzNumStart != ''">
+                and children_num &gt;= #{fzNumStart}
+            </if>
+            <if test="fzNumEnd != null and fzNumEnd != ''">
+                and children_num &lt;= #{fzNumEnd}
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark like concat('%',#{remark},'%')
+            </if>
+        </where>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="queryUserLevel" resultMap="userInfo">
+        select *
+        from tb_user_info
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="fzLevelStart != null">
+                and fz_level &gt;= #{fzLevelStart}
+            </if>
+            <if test="fzLevelEnd != null and fzLevelEnd != ''">
+                and fz_level &lt;= #{fzLevelEnd}
+            </if>
+            <if test="fzNumStart != null and fzNumStart != ''">
+                and children_num &gt;= #{fzNumStart}
+            </if>
+            <if test="fzNumEnd != null and fzNumEnd != ''">
+                and children_num &lt;= #{fzNumEnd}
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark like concat('%',#{remark},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getRecords" resultType="java.lang.Integer">
+        select count(1)
+        from tb_user_info
+        <where>
+            <if test="userId != null and userId != ''">
+                and name = #{userId}
+            </if>
+            <if test="fzLevelStart != null">
+                and fz_level &gt;= #{fzLevelStart}
+            </if>
+            <if test="fzLevelEnd != null and fzLevelEnd != ''">
+                and fz_level &lt;= #{fzLevelEnd}
+            </if>
+            <if test="fzNumStart != null and fzNumStart != ''">
+                and children_num &gt;= #{fzNumStart}
+            </if>
+            <if test="fzNumEnd != null and fzNumEnd != ''">
+                and children_num &lt;= #{fzNumEnd}
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark like concat('%',#{remark},'%')
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteAll">
+        delete from tb_user_info
+    </delete>
+
+    <delete id="deleteAllUserMoney">
+        delete from tb_user_money
+    </delete>
+
+    <insert id="saveAll" parameterType="cn.huanzi.qch.baseadmin.userlevel.pojo.UserInfo" >
+        insert into tb_user_info (name, parent, level, fz_level, children_num, money, total_money, parent_long_id,remark)
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+            (
+            #{item.name},
+            #{item.parent},
+            #{item.level},
+            #{item.fzLevel},
+            #{item.childrenNum},
+            #{item.money},
+            #{item.totalMoney},
+            #{item.parentLongId},
+            #{item.remark}
+            )
+        </foreach >
+    </insert>
+
+    <insert id="saveAllUserMoney" parameterType="cn.huanzi.qch.baseadmin.userlevel.dto.UserDTO" >
+        insert into tb_user_money (name, parent, money, remark)
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+            (
+            #{item.name},
+            #{item.parent},
+            #{item.money},
+            #{item.remark}
+            )
+        </foreach >
+    </insert>
+</mapper>

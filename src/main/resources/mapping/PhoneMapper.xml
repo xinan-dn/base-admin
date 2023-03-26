@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huanzi.qch.baseadmin.userlevel.mapper.PhoneMapper" >
+
+    <select id="queryByPrefix" resultType="java.util.Map">
+        select num_segment, province, city, server
+        from base_mobile_phone
+        where num_segment in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

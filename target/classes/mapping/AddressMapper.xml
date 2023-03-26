@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huanzi.qch.baseadmin.userlevel.mapper.AddressMapper" >
+    <resultMap id="address" type="cn.huanzi.qch.baseadmin.userlevel.pojo.Address" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="address" property="address" jdbcType="VARCHAR" />
+        <result column="label" property="label" jdbcType="VARCHAR" />
+        <result column="chain" property="chain" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <insert id="saveAll" parameterType="cn.huanzi.qch.baseadmin.userlevel.pojo.Address" >
+        insert into base_address (address, label, chain)
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+            (
+            #{item.address},
+            #{item.label},
+            #{item.chain}
+            )
+        </foreach >
+    </insert>
+
+    <select id="findByAddress" resultMap="address">
+        select * from base_address
+        where address in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and chain = #{chain}
+    </select>
+
+    <select id="getRecords" resultType="java.lang.Integer">
+        select count(1)
+        from base_address
+        <where>
+            <if test="chain != null and chain != ''">
+                and chain = #{chain}
+            </if>
+            <if test="address != null and address != ''">
+                and address like concat(#{address},'%')
+            </if>
+            <if test="label != null and label != ''">
+                and label like concat('%',#{label},'%')
+            </if>
+            and label is not null
+            and chain is not null
+        </where>
+    </select>
+
+    <delete id="deleteByAddress">
+        delete from base_address
+        where address in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and chain = #{chain}
+    </delete>
+
+    <delete id="deleteLabelNull">
+        delete from base_address
+        where label is null
+           or label = ''
+    </delete>
+
+    <delete id="deleteDupAddress">
+        delete from base_address where id in (
+            select min(t3.id) from (
+                                       select t2.address, t2.chain, res.id from (
+                                                                                    select t1.address, t1.chain from (
+                                                                                                                         select address, chain, count(1) con
+                                                                                                                         from base_address
+                                                                                                                         group by address, chain
+                                                                                                                     ) t1 where t1.con > 1
+                                                                                ) t2 inner join base_address res
+                                                                                                on res.chain = t2.chain and res.address = t2.address
+                                   ) t3 group by t3.address, t3.chain)
+    </delete>
+
+    <select id="getWithPage" resultMap="address">
+        select *
+        from base_address
+        <where>
+            <if test="chain != null and chain != ''">
+                and chain = #{chain}
+            </if>
+            <if test="address != null and address != ''">
+                and address like concat(#{address},'%')
+            </if>
+            <if test="label != null and label != ''">
+                and label like concat('%',#{label},'%')
+            </if>
+            and chain is not null
+            and label is not null
+        </where>
+        limit #{offset}, #{pageSize}
+    </select>
+</mapper>

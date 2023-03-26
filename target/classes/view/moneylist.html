@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- -->
+    <script th:replace="common/head::static"></script>
+
+    <!-- -->
+    <script src="https://cdn.bootcss.com/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- -->
+    <link th:href="@{/sys/authority/css/authority.css}" rel="stylesheet" type="text/css"/>
+
+    <script th:inline="javascript">
+        //
+        // ctx = /*[[@{/}]]*/'';
+        ctx = [[${#request.getContextPath()}]];//
+    </script>
+</head>
+<body>
+<div class="layui-col-md6" style="width: 100%;">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-table-tool" style="width: 97%;">
+                <div class="layui-table-tool-temp">
+                    <div >
+                        <span>账号/手机号：</span>
+                        <input type="text" id="userId" name="userId" autocomplete="off" style="height: 2em;margin-right: 1em;"
+                               placeholder="请输入账号/手机号">
+                            <span>奖励类型：</span>
+                            <select id="awardType" style="width:100px;height: 2em;margin-right:1em;"></select>
+                        <span>奖励种类：</span>
+                        <select id="coinType" style="width:100px;height: 2em;margin-right:1em;"></select>
+                        <button class="layui-btn layui-btn-sm" lay-event="query" onclick="showPage(1)">查询</button>
+                        <button class="layui-btn layui-btn-sm" lay-event="query" onclick="downResultFile()">导出查询结果</button>
+                    </div>
+                </div>
+            </div>
+            <!-- -->
+            <div class="layui-table-box">
+                <div class="layui-table-header" style="width: 99.7%;">
+                    <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                        <thead>
+                        <tr>
+                            <th style="width: 10%;">账号/手机号</th>
+                            <th style="width: 10%;">奖励类型</th>
+                            <th style="width: 10%;">奖励种类</th>
+                            <th style="width: 11%;">奖励总额</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="layui-table-body layui-table-main">
+                    <table id="userTable" cellspacing="0" cellpadding="0" border="0" class="layui-table" style="width: 99.6%;">
+                    </table>
+                </div>
+            </div>
+            <div class="layui-table-page">
+                <div id="tablePage" class="layui-box layui-laypage layui-laypage-default"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+
+    function downResultFile(){
+        debugger;
+        var userId = $('#userId').val();
+        var awardType = $('#awardType').val();
+        if (awardType == null) {
+            awardType = '';
+        }
+        var coinType = $('#coinType').val();
+        if (coinType == null) {
+            coinType = '';
+        }
+
+        $.ajax({
+            url: ctx + '/money/downQueryResult',
+            xhrFields: {
+                responseType: "arraybuffer"
+            },
+            type:"post",
+            data: {
+                'userId':userId,
+                'awardType':awardType,
+                'coinType':coinType,
+            },
+            success:function(data){
+                /* */
+                let blob = new Blob([data], {
+                    type: "application/vnd.ms-excel;charset=UTF-8"
+                })
+                let downloadUrl = window.URL.createObjectURL(blob)
+                let link = document.createElement('a')
+                link.href = downloadUrl
+                link.download = '用户金额报表.xlsx'
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(downloadUrl)
+            }
+        })
+
+    }
+
+    $(function(){
+        showPage(1);
+    });
+    function showPage(page){
+        var userId = $('#userId').val();
+        var awardType = $('#awardType').val();
+        if (awardType == null) {
+            awardType = '';
+        }
+        var coinType = $('#coinType').val();
+        if (coinType == null) {
+            coinType = '';
+        }
+        $.ajax({
+            type:"post",
+            url: ctx + '/money/listByPage',
+            dataType:"json",
+            data: {
+                'userId':userId,
+                'awardType':awardType,
+                'coinType':coinType,
+                'page':page,
+                'pageSize':20
+            },
+            cache: false,
+            success:function(data){
+                debugger
+
+                //
+                var awardTypeList = data.data.awardTypeList;
+                var awardTypeSelect = document.getElementById("awardType");
+                awardTypeSelect.options.length = 0;
+                var defaultOpt1 = new Option('请选择', '');
+                awardTypeSelect.options.add(defaultOpt1);
+                for(var m=0; m<awardTypeList.length; m++){
+                    var opt = new Option(awardTypeList[m], awardTypeList[m]);
+
+                    if (data.data.awardType == awardTypeList[m]) {
+                        opt.selected = true;
+                    }
+
+                    awardTypeSelect.options.add(opt);
+                }
+
+                var coinTypeList = data.data.coinTypeList;
+                var coinTypeSelect = document.getElementById("coinType");
+                coinTypeSelect.options.length = 0;
+                var defaultOpt2 = new Option('请选择', '');
+                coinTypeSelect.options.add(defaultOpt2);
+                for(var n=0; n<coinTypeList.length; n++){
+                    var opt = new Option(coinTypeList[n], coinTypeList[n]);
+
+                    if (data.data.coinType == coinTypeList[n]) {
+                        opt.selected = true;
+                    }
+
+                    coinTypeSelect.options.add(opt);
+                }
+
+                var totalMoney = data.data.sidx;
+                var rows = data.data.records; //
+                var page = data.data.page;
+                var pageSize = data.data.pageSize;
+                data = data.data.rows;
+                var pageNum = Math.ceil(rows/pageSize); //
+                var content = '<tbody>';
+                for(var i=0;i<data.length;i++){
+                    content += '<tr>' +
+                        '<td style="width: 10%;">'+data[i].name+'</td>' +
+                        '<td style="width: 10%;">'+data[i].awardType+'</td>' +
+                        '<td style="width: 10%;">'+data[i].coinType+'</td>' +
+                        '<td style="width: 11%;">'+data[i].money+'</td>' +
+                        '</tr>';
+                }
+                $("#userTable").empty();
+                $("#userTable").append(content);
+
+                var pageContent = '';
+                if(page == 1){
+                    pageContent += '<a href="#" class="layui-laypage-prev layui-disabled">《</a>';
+                }else{
+                    pageContent += '<a href="javascript:showPage('+(page-1)+')" >《</a>';
+                }
+
+                var startPageNum = 1;
+                var endPageNum = pageNum;
+                if (pageNum > 10) {
+                    if (page > 5) {
+                        startPageNum = page - 4;
+                        endPageNum = page +5;
+                    } else {
+                        endPageNum = 10;
+                    }
+                }
+                for(var i=startPageNum;i<=endPageNum;i++){
+                    if(i == page){
+                        pageContent += '<a href="javascript:showPage('+i+')" class="layui-laypage-prev layui-disabled">'+i+'</a>';
+                    }else{
+                        pageContent += '<a href="javascript:showPage('+i+')">'+i+'</a>';
+                    }
+                }
+
+                if(page == pageNum){
+                    pageContent += '<a href="#" class="layui-laypage-prev layui-disabled">》</a>';
+                }else{
+                    pageContent += '<a href="javascript:showPage('+(page+1)+')" >》</a>';
+                }
+
+                pageContent += '<span class="layui-laypage-count">' +
+                    '共'+rows+'条记录 / '+pageNum+'页' +
+                '</span>>';
+
+                pageContent += '<span>总金额：'+totalMoney
+                    +'</span>'
+                $("#tablePage").empty();
+                $("#tablePage").append(pageContent);
+            }
+        });
+    }
+</script>
+</html>
